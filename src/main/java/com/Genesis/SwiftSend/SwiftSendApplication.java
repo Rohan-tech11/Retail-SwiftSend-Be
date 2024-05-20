@@ -25,8 +25,8 @@ public class SwiftSendApplication {
 	}
 
 	@Bean
-	CommandLineRunner run(RoleRepository roleRepository, UserRepository userRepository,
-			PasswordEncoder passwordEncode) {
+	CommandLineRunner run(RoleRepository roleRepository,
+			UserRepository userRepository, PasswordEncoder passwordEncode) {
 		return args -> {
 			if (roleRepository.findByAuthority("ADMIN").isPresent())
 				return;
@@ -40,12 +40,15 @@ public class SwiftSendApplication {
 			roles.add(adminRole);
 			roles.add(userRole);
 			log.info("roles are :" + roles);
+			log.info("roles are ");
 
 			User admin = new User(1, "SwiftSendAdmin", "johndoe12345@gmail.com",
-					passwordEncode.encode("SwiftSendAdmin"), true, "1234-6785-345", roles);
+					passwordEncode.encode("SwiftSendAdmin"), true,
+					"1234-6785-345", roles);
 
 			userRepository.save(admin);
-			log.info("logged admin is" + userRepository.findByEmail("johndoe12345@gmail.com").get());
+			log.info("logged admin is" + userRepository
+					.findByEmail("johndoe12345@gmail.com").get());
 		};
 	}
 }
