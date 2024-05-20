@@ -14,7 +14,7 @@ public class ErrorResponse {
 	public enum Error {
 		INVALID_REQUEST, // You can add more error types as needed
 		// Add additional error types here
-		// error
+		// error error
 	}
 
 	public Error getError() {
