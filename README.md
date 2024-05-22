@@ -1,7 +1,6 @@
-Certainly! Here's the complete README content with additional details on database configuration and technologies required for backend development:
 
 ```markdown
-# Java Spring Boot Application
+# Java Spring Boot Application SwiftSend
 
 ## Setting up the Project Locally
 
