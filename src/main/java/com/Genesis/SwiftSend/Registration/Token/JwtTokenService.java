@@ -34,33 +34,42 @@ public class JwtTokenService {
 	@Autowired
 	private JwtDecoder jwtDecoder;
 
-//	todo:add the expiration time and add the  jwtfilter to throw the exceptions
+	// todo:add the expiration time and add the jwtfilter to throw the
+	// exceptions
 	public String generateJwt(Authentication auth) {
 
 		Instant currentTime = Instant.now();
-//		Instant expirationTime = currentTime.plusSeconds(120); // 30 minutes in seconds
+		// Instant expirationTime = currentTime.plusSeconds(120); // 30 minutes
+		// in seconds
 
-		String scope = auth.getAuthorities().stream().map(GrantedAuthority::getAuthority)
+		String scope = auth.getAuthorities().stream()
+				.map(GrantedAuthority::getAuthority)
 				.collect(Collectors.joining(" "));
 		// Add custom claims (username and phoneNumber)
 		String phoneNumber = "";
 		String email = "";
 
 		if (auth.getPrincipal() instanceof UserRegistrationDetails) {
-			phoneNumber = ((UserRegistrationDetails) auth.getPrincipal()).getPhoneNumber();
-			email = ((UserRegistrationDetails) auth.getPrincipal()).getEmailAddress();
+			phoneNumber = ((UserRegistrationDetails) auth.getPrincipal())
+					.getPhoneNumber();
+			email = ((UserRegistrationDetails) auth.getPrincipal())
+					.getEmailAddress();
 
 		} else if (auth.getPrincipal() instanceof ClientRegistrationDetails) {
-			phoneNumber = ((ClientRegistrationDetails) auth.getPrincipal()).getPhoneNumber();
-			email = ((ClientRegistrationDetails) auth.getPrincipal()).getEmailAddress();
+			phoneNumber = ((ClientRegistrationDetails) auth.getPrincipal())
+					.getPhoneNumber();
+			email = ((ClientRegistrationDetails) auth.getPrincipal())
+					.getEmailAddress();
 
 		}
 
-		JwtClaimsSet claims = JwtClaimsSet.builder().issuer("SwiftSendService").issuedAt(currentTime)
-				.subject(auth.getName()).claim("roles", scope).claim("email", email).claim("phoneNumber", phoneNumber)
-				.build();
+		JwtClaimsSet claims = JwtClaimsSet.builder().issuer("SwiftSendService")
+				.issuedAt(currentTime).subject(auth.getName())
+				.claim("roles", scope).claim("email", email)
+				.claim("phoneNumber", phoneNumber).build();
 
-		return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+		return jwtEncoder.encode(JwtEncoderParameters.from(claims))
+				.getTokenValue();
 	}
 
 	/**
@@ -68,36 +77,37 @@ public class JwtTokenService {
 	 * @return
 	 */
 
-//	public String extractUsername(String jwtToken) {
-//		try {
-//			// Decode and validate the JWT token using the JwtDecoder
-//			Jwt jwt = jwtDecoder.decode(jwtToken);
-//
-//			// Extract the subject (username) from the JWT claims
-//			return jwt.getSubject();
-//		} catch (JwtValidationException ex) {
-//			// Handle JWT validation errors
-//			log.error("JWT validation failed: " + ex.getMessage());
-//			// You can choose how to handle validation errors, such as returning null or
-//			// throwing an exception
-//			return null; // Return null if token is not valid
-//		}
-//	}
-//
-//	public boolean isTokenValid(String jwtToken, User userDetails) {
-//		try {
-//			// Decode and validate the JWT token using the JwtDecoder
-//			Jwt jwt = jwtDecoder.decode(jwtToken);
-//
-//			// Extract the subject (typically the username) from the JWT
-//			String usernameFromToken = jwt.getClaim("sub");
-//
-//			// Compare the username from the token with the UserDetails username
-//			return usernameFromToken.equals(userDetails.getFullName());
-//		} catch (JwtValidationException ex) {
-//			// Handle JWT validation errors
-//			log.error("JWT validation failed: " + ex.getMessage());
-//			return false;
-//		}
-//	}
+	// public String extractUsername(String jwtToken) {
+	// try {
+	// // Decode and validate the JWT token using the JwtDecoder
+	// Jwt jwt = jwtDecoder.decode(jwtToken);
+	//
+	// // Extract the subject (username) from the JWT claims
+	// return jwt.getSubject();
+	// } catch (JwtValidationException ex) {
+	// // Handle JWT validation errors
+	// log.error("JWT validation failed: " + ex.getMessage());
+	// // You can choose how to handle validation errors, such as returning null
+	// or
+	// // throwing an exception
+	// return null; // Return null if token is not valid
+	// }
+	// }
+	//
+	// public boolean isTokenValid(String jwtToken, User userDetails) {
+	// try {
+	// // Decode and validate the JWT token using the JwtDecoder
+	// Jwt jwt = jwtDecoder.decode(jwtToken);
+	//
+	// // Extract the subject (typically the username) from the JWT
+	// String usernameFromToken = jwt.getClaim("sub");
+	//
+	// // Compare the username from the token with the UserDetails username
+	// return usernameFromToken.equals(userDetails.getFullName());
+	// } catch (JwtValidationException ex) {
+	// // Handle JWT validation errors
+	// log.error("JWT validation failed: " + ex.getMessage());
+	// return false;
+	// }
+	// }
 }

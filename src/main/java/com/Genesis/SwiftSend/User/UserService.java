@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AccountExpiredException;
@@ -38,6 +39,8 @@ import com.Genesis.SwiftSend.Registration.Token.VerificationTokenRepository;
 import com.Genesis.SwiftSend.ResponseHandler.LoginResponseDto;
 import com.Genesis.SwiftSend.Role.Role;
 import com.Genesis.SwiftSend.Role.RoleRepository;
+import com.Genesis.SwiftSend.UserOrder.Orders;
+import com.Genesis.SwiftSend.UserOrder.OrdersRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +62,7 @@ public class UserService implements IUserService {
 	private final AuthenticationManager authenticationManager;
 	private final ClientRepository clientRepository;
 	private final ClientServicesRepository clientServicesRepository;
+	private final OrdersRepository ordersRepository;
 
 	private final JwtTokenService JWTtokenService;
 
@@ -78,7 +82,8 @@ public class UserService implements IUserService {
 			errorDetails.put("field", "email");
 			errorDetails.put("code", "EMAIL_EXISTS");
 			throw new UserAlreadyExistsException(
-					" A  Swift send client with the same email  exists" + request.email() + " already exists",
+					" A  Swift send client with the same email  exists"
+							+ request.email() + " already exists",
 					HttpStatus.BAD_REQUEST, errorDetails);
 		}
 
@@ -87,12 +92,16 @@ public class UserService implements IUserService {
 			if (loggedInUser.getEmail() != null) {
 				errorDetails.put("field", "email");
 				errorDetails.put("code", "EMAIL_EXISTS");
-				throw new UserAlreadyExistsException("User with email " + request.email() + " already exists",
+				throw new UserAlreadyExistsException(
+						"User with email " + request.email()
+								+ " already exists",
 						HttpStatus.BAD_REQUEST, errorDetails);
 			} else if (loggedInUser.getMobileNumber() != null) {
 				errorDetails.put("field", "mobile_number");
 				errorDetails.put("code", "MOBILE_NUMBER_EXISTS");
-				throw new UserAlreadyExistsException("User with number " + request.mobileNumber() + " already exists",
+				throw new UserAlreadyExistsException(
+						"User with number " + request.mobileNumber()
+								+ " already exists",
 						HttpStatus.BAD_REQUEST, errorDetails);
 			}
 		}
@@ -113,6 +122,7 @@ public class UserService implements IUserService {
 	 * @param mobileNumber
 	 * @return
 	 */
+	@Override
 	public Optional<User> findByMobileNumber(String mobileNumber) {
 		// TODO Auto-generated method stub
 		return userRepository.findByMobileNumber(mobileNumber);
@@ -137,7 +147,8 @@ public class UserService implements IUserService {
 		}
 		User user = token.getUser();
 		Calendar calendar = Calendar.getInstance();
-		if ((token.getExpirationTime().getTime() - calendar.getTime().getTime()) <= 0) {
+		if ((token.getExpirationTime().getTime()
+				- calendar.getTime().getTime()) <= 0) {
 			return "Token already expired";
 		}
 		user.setEnabled(true);
@@ -150,8 +161,8 @@ public class UserService implements IUserService {
 	 * same transaction Hibernates
 	 * 
 	 * typically tracks changes to managed entities and will update the existing
-	 * record in the database with the changes when the transaction is committed.In
-	 * this case,you won't see a new row in the database.
+	 * record in the database with the changes when the transaction is
+	 * committed.In this case,you won't see a new row in the database.
 	 */
 
 	@Override
@@ -167,6 +178,7 @@ public class UserService implements IUserService {
 
 	// authenticate manager will use user details and user details service to
 	// authenticate the logged in user
+	@Override
 	public LoginResponseDto loginUser(String email, String password) {
 		Map<String, Object> errorDetails = new HashMap<>();
 
@@ -174,31 +186,43 @@ public class UserService implements IUserService {
 
 		try {
 			Authentication auth;
-			// When you call authenticate on it, the ProviderManager will iterate through
+			// When you call authenticate on it, the ProviderManager will
+			// iterate through
 			// its list of providers
-			// and delegate the authentication to the first provider that supports the given
+			// and delegate the authentication to the first provider that
+			// supports the given
 			// Authentication type.
 			if (!theUser.isPresent()) {
 				// Perform client authentication
-				// user attempts to authenticate by providing a username and password, these
-				// credentials are usually encapsulated in a UsernamePasswordAuthenticationToken
+				// user attempts to authenticate by providing a username and
+				// password, these
+				// credentials are usually encapsulated in a
+				// UsernamePasswordAuthenticationToken
 				// object.
-				auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+				auth = authenticationManager.authenticate(
+						new UsernamePasswordAuthenticationToken(email,
+								password));
 			} else {
 				// Perform user authentication
-				auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+				auth = authenticationManager.authenticate(
+						new UsernamePasswordAuthenticationToken(email,
+								password));
 			}
 			Object principal = auth.getPrincipal();
-			log.info("Principal type while login: " + principal.getClass().getName());
+			log.info("Principal type while login: "
+					+ principal.getClass().getName());
 			String token = JWTtokenService.generateJwt(auth);
 
 			if (!theUser.isPresent()) {
 				// Handle client login response
 				Client client = clientRepository.findByEmail(email).get();
-				return new LoginResponseDto(client.getEmail(), token, client.isAdminApproved());
+				return new LoginResponseDto(client.getEmail(), token,
+						client.isAdminApproved());
 			} else {
 				// Handle user login response
-				return new LoginResponseDto(userRepository.findByEmail(email).get().getEmail(), token);
+				return new LoginResponseDto(
+						userRepository.findByEmail(email).get().getEmail(),
+						token);
 			}
 
 		} catch (AuthenticationException e) {
@@ -208,23 +232,28 @@ public class UserService implements IUserService {
 				// Handle invalid username or password
 				errorDetails.put("field", "username or password");
 				errorDetails.put("code", "INVALID_CREDENTIALS");
-				throw new ResponseStatusException("Invalid credentials", HttpStatus.BAD_REQUEST, errorDetails);
+				throw new ResponseStatusException("Invalid credentials",
+						HttpStatus.BAD_REQUEST, errorDetails);
 			} else if (e instanceof LockedException) {
 				// Handle locked account
 				errorDetails.put("code", "ACCOUNT_LOCKED");
-				throw new ResponseStatusException("Account is Locked", HttpStatus.BAD_REQUEST, errorDetails);
+				throw new ResponseStatusException("Account is Locked",
+						HttpStatus.BAD_REQUEST, errorDetails);
 			} else if (e instanceof AccountDisabledException) {
 				// Handle disabled account
 				errorDetails.put("code", "ACCOUNT_DISABLED");
-				throw new ResponseStatusException("Account is disabled", HttpStatus.BAD_REQUEST, errorDetails);
+				throw new ResponseStatusException("Account is disabled",
+						HttpStatus.BAD_REQUEST, errorDetails);
 			} else if (e instanceof AccountExpiredException) {
 				// Handle expired account
 				errorDetails.put("code", "ACCOUNT_EXPIRED");
-				throw new ResponseStatusException("Account is expired", HttpStatus.BAD_REQUEST, errorDetails);
+				throw new ResponseStatusException("Account is expired",
+						HttpStatus.BAD_REQUEST, errorDetails);
 			} else {
 				// Handle other authentication exceptions
 				errorDetails.put("code", "EMAIL_VERIFICATIONFAILED");
-				throw new ResponseStatusException("Email Verification  failed", HttpStatus.BAD_REQUEST, errorDetails);
+				throw new ResponseStatusException("Email Verification  failed",
+						HttpStatus.BAD_REQUEST, errorDetails);
 			}
 		}
 	}
@@ -238,22 +267,48 @@ public class UserService implements IUserService {
 	// used hashmap to construct the response coming from repo
 	@Override
 	public HashMap<String, Object> fetchClientServiceById(Long id) {
-		Optional<ClientServices> optionalClientService = clientServicesRepository.findById(id);
+		Optional<ClientServices> optionalClientService = clientServicesRepository
+				.findById(id);
 
 		if (optionalClientService.isPresent()) {
 			ClientServices clientService = optionalClientService.get();
 			HashMap<String, Object> serviceMap = new HashMap<>();
 
 			serviceMap.put("serviceName", clientService.getServiceName());
-			serviceMap.put("serviceDescription", clientService.getServiceDescription());
-			serviceMap.put("deliveryTimeDays", clientService.getDeliveryTimeDays());
+			serviceMap.put("serviceDescription",
+					clientService.getServiceDescription());
+			serviceMap.put("deliveryTimeDays",
+					clientService.getDeliveryTimeDays());
 			serviceMap.put("price", clientService.getPrice());
 			serviceMap.put("serviceType", clientService.getServiceType());
 			serviceMap.put("ServiceProvider", clientService.getClientName());
 
 			return serviceMap;
 		} else {
-			return new HashMap<>(); // Return an empty map if ClientServices with the given ID is not found
+			return new HashMap<>(); // Return an empty map if ClientServices
+									// with the given ID is not found
+		}
+	}
+
+	@Override
+	public List<Map<String, Object>> getUserOrders(String email) {
+		Optional<User> userOptional = userRepository.findByEmail(email);
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			List<Orders> orders = ordersRepository.findByUser(user);
+
+			return orders.stream().map(order -> {
+				Map<String, Object> orderMap = new HashMap<>();
+				orderMap.put("orderId", order.getId());
+				orderMap.put("serviceName",
+						order.getClientServices().getServiceName());
+				orderMap.put("clientName", order.getClient().getBusinessName());
+				return orderMap;
+			}).collect(Collectors.toList());
+		} else {
+			throw new ResponseStatusException(
+					"User not found with email: " + email,
+					HttpStatus.NOT_FOUND);
 		}
 	}
 

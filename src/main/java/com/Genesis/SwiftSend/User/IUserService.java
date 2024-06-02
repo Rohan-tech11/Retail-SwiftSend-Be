@@ -6,6 +6,7 @@ package com.Genesis.SwiftSend.User;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.Genesis.SwiftSend.Client.ClientServices;
@@ -37,5 +38,7 @@ public interface IUserService {
 	List<ClientServices> getAllClientServices();
 
 	HashMap<String, Object> fetchClientServiceById(Long id);
+
+	List<Map<String, Object>> getUserOrders(String email);
 
 }

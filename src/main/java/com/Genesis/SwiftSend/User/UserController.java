@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,44 +38,82 @@ public class UserController {
 	@GetMapping("/getAllClientServices")
 	public ResponseEntity<Object> getAllClientServices() {
 		HashMap<String, Object> data = new HashMap<>();
-		List<ClientServices> allClientServices = userService.getAllClientServices();
+		List<ClientServices> allClientServices = userService
+				.getAllClientServices();
 
 		if (allClientServices.isEmpty()) {
-			return ResponseHandler.responseBuilder(" No client Services Available, please come back later",
+			return ResponseHandler.responseBuilder(
+					" No client Services Available, please come back later",
 					HttpStatus.OK);
 		} else {
 			// Map each ClientServices object to a Map with client name included
-			List<Map<String, Object>> formattedClientServices = allClientServices.stream().map(clientService -> {
-				Map<String, Object> serviceMap = new HashMap<>();
-				serviceMap.put("id", clientService.getId());
-				serviceMap.put("serviceName", clientService.getServiceName());
-				serviceMap.put("serviceDescription", clientService.getServiceDescription());
-				serviceMap.put("deliveryTimeDays", clientService.getDeliveryTimeDays());
-				serviceMap.put("price", clientService.getPrice());
-				serviceMap.put("serviceType", clientService.getServiceType());
-				serviceMap.put("clientName", clientService.getClientName());
-				return serviceMap;
-			}).collect(Collectors.toList());
+			List<Map<String, Object>> formattedClientServices = allClientServices
+					.stream().map(clientService -> {
+						Map<String, Object> serviceMap = new HashMap<>();
+						serviceMap.put("id", clientService.getId());
+						serviceMap.put("serviceName",
+								clientService.getServiceName());
+						serviceMap.put("serviceDescription",
+								clientService.getServiceDescription());
+						serviceMap.put("deliveryTimeDays",
+								clientService.getDeliveryTimeDays());
+						serviceMap.put("price", clientService.getPrice());
+						serviceMap.put("serviceType",
+								clientService.getServiceType());
+						serviceMap.put("clientName",
+								clientService.getClientName());
+						return serviceMap;
+					}).collect(Collectors.toList());
 
 			data.put("data", formattedClientServices);
-			return ResponseHandler.responseBuilder("Fetched all client Services", HttpStatus.OK, data);
+			return ResponseHandler.responseBuilder(
+					"Fetched all client Services", HttpStatus.OK, data);
 		}
 	}
 
-	// path variable is suitable for parameters that are required and expected to be
+	// path variable is suitable for parameters that are required and expected
+	// to be
 	// present in the url
 	@GetMapping("/fetchServiceById/{id}")
 	public ResponseEntity<Object> getServiceById(@PathVariable Long id) {
 
-		HashMap<String, Object> clientServiceMap = userService.fetchClientServiceById(id);
+		HashMap<String, Object> clientServiceMap = userService
+				.fetchClientServiceById(id);
 		if (!clientServiceMap.isEmpty()) {
-			return ResponseHandler.responseBuilder("Fetched the  client service with id  : " + id, HttpStatus.OK,
-					clientServiceMap);
+			return ResponseHandler.responseBuilder(
+					"Fetched the  client service with id  : " + id,
+					HttpStatus.OK, clientServiceMap);
 
 		} else {
-			return ResponseHandler.responseBuilder(" no  client service with that id  : " + id, HttpStatus.NOT_FOUND);
+			return ResponseHandler.responseBuilder(
+					" no  client service with that id  : " + id,
+					HttpStatus.NOT_FOUND);
 		}
 
+	}
+
+	@GetMapping("/fetchUserOrders")
+	public ResponseEntity<Object> fetchUserOrders(
+			Authentication authentication) {
+		Object principal = authentication.getPrincipal();
+
+		if (principal instanceof Jwt) {
+			String userEmail = ((Jwt) principal).getClaim("email");
+			List<Map<String, Object>> userOrders = userService
+					.getUserOrders(userEmail);
+
+			if (userOrders.isEmpty()) {
+				return ResponseHandler.responseBuilder(
+						"No orders found for the user.", HttpStatus.NOT_FOUND);
+			} else {
+				return ResponseHandler.responseBuilder(
+						"Fetched user orders successfully.", HttpStatus.OK,
+						userOrders);
+			}
+		} else {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+					.body("Invalid authentication principal type.");
+		}
 	}
 
 }
