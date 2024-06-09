@@ -3,6 +3,12 @@
  */
 package com.Genesis.SwiftSend.Client;
 
+import java.util.UUID;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import com.Genesis.SwiftSend.UserOrder.Orders;
 
 import jakarta.persistence.Column;
@@ -12,6 +18,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -27,6 +34,12 @@ public class ClientQuotation {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+
+	@GeneratedValue(generator = "UUID")
+	@GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+	@Column(name = "uuid", columnDefinition = "char(36)", unique = true, nullable = false, updatable = false)
+	@JdbcTypeCode(SqlTypes.VARCHAR)
+	private UUID uuid;
 
 	@Column(nullable = false)
 	private double price;
@@ -51,4 +64,10 @@ public class ClientQuotation {
 	@JoinColumn(name = "order_id")
 	private Orders order;
 
+	@PrePersist
+	protected void onCreate() {
+		if (uuid == null) {
+			uuid = UUID.randomUUID();
+		}
+	}
 }

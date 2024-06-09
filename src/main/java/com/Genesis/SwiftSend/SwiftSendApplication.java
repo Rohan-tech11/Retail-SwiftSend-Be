@@ -26,29 +26,32 @@ public class SwiftSendApplication {
 
 	@Bean
 	CommandLineRunner run(RoleRepository roleRepository,
-			UserRepository userRepository, PasswordEncoder passwordEncode) {
+			UserRepository userRepository, PasswordEncoder passwordEncoder) {
 		return args -> {
 			if (roleRepository.findByAuthority("ADMIN").isPresent())
 				return;
+
 			Role adminRole = roleRepository.save(new Role("ADMIN"));
 			roleRepository.save(new Role("USER"));
 			roleRepository.save(new Role("CLIENT"));
-			Role userRole = roleRepository.findByAuthority("USER").get();
-			log.info("adminrole " + adminRole + " " + userRole);
+			Role userRole = roleRepository.findByAuthority("USER").orElseThrow(
+					() -> new RuntimeException("USER role not found"));
 
 			Set<Role> roles = new HashSet<>();
 			roles.add(adminRole);
 			roles.add(userRole);
-			log.info("roles are :" + roles);
-			log.info("roles are ");
 
-			User admin = new User(1, "SwiftSendAdmin", "johndoe12345@gmail.com",
-					passwordEncode.encode("SwiftSendAdmin"), true,
-					"1234-6785-345", roles);
+			User admin = new User();
+			admin.setFullName("SwiftSendAdmin");
+			admin.setEmail("johndoe12345@gmail.com");
+			admin.setPassword(passwordEncoder.encode("SwiftSendAdmin"));
+			admin.setEnabled(true);
+			admin.setMobileNumber("1234-6785-345");
+			admin.setAuthorities(roles);
 
 			userRepository.save(admin);
-			log.info("logged admin is" + userRepository
-					.findByEmail("johndoe12345@gmail.com").get());
+			log.info("Admin user created successfully!");
 		};
 	}
+
 }
