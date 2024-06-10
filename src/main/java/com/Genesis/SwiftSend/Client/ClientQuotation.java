@@ -64,6 +64,7 @@ public class ClientQuotation {
 	@JoinColumn(name = "order_id")
 	private Orders order;
 
+	// lifecycle callback if hibernate generator fails,it will add the uuid
 	@PrePersist
 	protected void onCreate() {
 		if (uuid == null) {
