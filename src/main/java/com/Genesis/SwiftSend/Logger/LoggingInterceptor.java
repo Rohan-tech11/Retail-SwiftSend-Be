@@ -4,17 +4,12 @@
 
 package com.Genesis.SwiftSend.Logger;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * @author rohan
- *
- */
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -24,7 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class LoggingInterceptor implements HandlerInterceptor {
 
-	private static final Logger logger = LoggerFactory
+	private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
 			.getLogger(LoggingInterceptor.class);
 
 	@Override
@@ -37,6 +32,7 @@ public class LoggingInterceptor implements HandlerInterceptor {
 		}
 		UUID requestId = UUID.randomUUID();
 		request.setAttribute("requestId", requestId.toString());
+		request.setAttribute("startTime", Instant.now());
 
 		logger.info("RequestId: {} RequestUrl: {}", requestId, requestUrl);
 		logger.info("Request Headers: {}", getHeadersInfo(request));
@@ -50,14 +46,18 @@ public class LoggingInterceptor implements HandlerInterceptor {
 		UUID requestId = UUID
 				.fromString((String) request.getAttribute("requestId"));
 		int status = response.getStatus();
+		Instant startTime = (Instant) request.getAttribute("startTime");
+		Instant endTime = Instant.now();
+		long durationMs = Duration.between(startTime, endTime).toMillis();
 
 		if (ex != null) {
 			logger.error(
 					"There was an error from the Response of RequestId: {}. Error: {}",
 					requestId, ex.getMessage(), ex);
 		} else {
-			logger.info("Response from RequestId: {}. Response status code: {}",
-					requestId, status);
+			logger.info(
+					"Response from RequestId: {}. Response status code: {}. Time taken: {} ms",
+					requestId, status, durationMs);
 		}
 	}
 
@@ -72,5 +72,4 @@ public class LoggingInterceptor implements HandlerInterceptor {
 		}
 		return headersInfo;
 	}
-
 }
