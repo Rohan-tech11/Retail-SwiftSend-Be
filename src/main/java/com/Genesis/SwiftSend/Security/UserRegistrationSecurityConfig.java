@@ -50,7 +50,9 @@ import com.nimbusds.jose.proc.SecurityContext;
 public class UserRegistrationSecurityConfig {
 
 	private final UserDetailsService userDetailsService;
-	private final UserDetailsService clientDetailsService; // Separate UserDetailsService for clients
+	private final UserDetailsService clientDetailsService; // Separate
+															// UserDetailsService
+															// for clients
 	private final ClientRepository clientRepository;
 	private final UserRepository userRepository;
 
@@ -67,9 +69,11 @@ public class UserRegistrationSecurityConfig {
 		this.userRepository = userRepository;
 	}
 
-	private static final String[] WHITE_LIST_URL = { "/api/register/**", "/v2/api-docs", "/v3/api-docs/**",
-			"/swagger-resources", "/swagger-resources/**", "/configuration/ui", "/configuration/security",
-			"/swagger-ui/**", "/webjars/**", "/swagger-ui.html" };
+	private static final String[] WHITE_LIST_URL = {"/api/register/**",
+			"/v2/api-docs", "/v3/api-docs/**", "/swagger-resources",
+			"/swagger-resources/**", "/configuration/ui",
+			"/configuration/security", "/swagger-ui/**", "/webjars/**",
+			"/swagger-ui.html"};
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -80,7 +84,8 @@ public class UserRegistrationSecurityConfig {
 	public CorsFilter corsFilter() {
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		CorsConfiguration config = new CorsConfiguration();
-		config.addAllowedOrigin("*"); // TODO: Specify the allowed origin(s) for production
+		config.addAllowedOrigin("*"); // TODO: Specify the allowed origin(s) for
+										// production
 		config.addAllowedHeader("*");
 		config.addAllowedMethod(HttpMethod.OPTIONS.name());
 		config.addAllowedMethod(HttpMethod.GET.name());
@@ -97,7 +102,8 @@ public class UserRegistrationSecurityConfig {
 	}
 
 	// When you define a method annotated with @Bean and returning an
-	// AuthenticationManager, Spring will automatically call that method to create
+	// AuthenticationManager, Spring will automatically call that method to
+	// create
 	// an instance of AuthenticationManager when needed.
 	@Bean
 	@Lazy
@@ -109,32 +115,39 @@ public class UserRegistrationSecurityConfig {
 		DaoAuthenticationProvider clientDaoProvider = new DaoAuthenticationProvider();
 		clientDaoProvider.setUserDetailsService(clientDetailsService);
 		clientDaoProvider.setPasswordEncoder(passwordEncoder());
-//		///**
-//		 * Attempts to authenticate the passed {@link Authentication} object.
-//		 * <p>
-//		 * The list of {@link AuthenticationProvider}s will be successively tried until an
-//		 * <code>AuthenticationProvider</code> indicates it is capable of authenticating the
-//		 * type of <code>Authentication</code> object passed. Authentication will then be
-//		 * attemp
+		// ///**
+		// * Attempts to authenticate the passed {@link Authentication} object.
+		// * <p>
+		// * The list of {@link AuthenticationProvider}s will be successively
+		// tried until an
+		// * <code>AuthenticationProvider</code> indicates it is capable of
+		// authenticating the
+		// * type of <code>Authentication</code> object passed. Authentication
+		// will then be
+		// * attemp
 		return new ProviderManager(daoProvider, clientDaoProvider);
 	}
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.addFilterBefore(corsFilter(), UsernamePasswordAuthenticationFilter.class);
+		http.addFilterBefore(corsFilter(),
+				UsernamePasswordAuthenticationFilter.class);
 		http.cors(cors -> cors.disable());
 		http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> {
 			auth.requestMatchers(WHITE_LIST_URL).permitAll();
 			auth.requestMatchers("/api/admin/**").hasRole("ADMIN");
 			auth.requestMatchers("/api/users/**").hasAnyRole("ADMIN", "USER");
-			auth.anyRequest().authenticated().and().addFilterBefore(jwtAuthenticationFilter(),
+			auth.anyRequest().authenticated().and().addFilterBefore(
+					jwtAuthenticationFilter(),
 					UsernamePasswordAuthenticationFilter.class);
 
 		});
 
 		// converter for checking the roles to access endpoints
-		http.oauth2ResourceServer().jwt().jwtAuthenticationConverter(jwtAuthenticationConverter());
-		http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+		http.oauth2ResourceServer().jwt()
+				.jwtAuthenticationConverter(jwtAuthenticationConverter());
+		http.sessionManagement(session -> session
+				.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
 		return http.build();
 	}
@@ -147,15 +160,18 @@ public class UserRegistrationSecurityConfig {
 
 	// decoder uses public keysd to verify and authenticiy of the token
 
-//	@Bean
-//	public JwtDecoder jwtDecoder() {
-//		return new CustomJwtDecoder(NimbusJwtDecoder.withPublicKey(keys.getPublicKey()).build());
-//	}
+	// @Bean
+	// public JwtDecoder jwtDecoder() {
+	// return new
+	// CustomJwtDecoder(NimbusJwtDecoder.withPublicKey(keys.getPublicKey()).build());
+	// }
 
 	@Bean
 	public JwtEncoder jwtEncoder() {
-		JWK jwk = new RSAKey.Builder(keys.getPublicKey()).privateKey(keys.getPrivateKey()).build();
-		JWKSource<SecurityContext> jwks = new ImmutableJWKSet<>(new JWKSet(jwk));
+		JWK jwk = new RSAKey.Builder(keys.getPublicKey())
+				.privateKey(keys.getPrivateKey()).build();
+		JWKSource<SecurityContext> jwks = new ImmutableJWKSet<>(
+				new JWKSet(jwk));
 		return new NimbusJwtEncoder(jwks);
 	}
 
@@ -165,7 +181,8 @@ public class UserRegistrationSecurityConfig {
 		jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("roles");
 		jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
 		JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
-		jwtConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+		jwtConverter.setJwtGrantedAuthoritiesConverter(
+				jwtGrantedAuthoritiesConverter);
 		return jwtConverter;
 	}
 
