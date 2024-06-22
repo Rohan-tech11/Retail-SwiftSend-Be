@@ -143,6 +143,19 @@ public class UserRegistrationSecurityConfig {
 
 		});
 
+		// Add OAuth2 login configuration
+		http.oauth2Login().loginPage("http://127.0.0.1:3000/login") // Redirect
+																	// to the
+																	// React
+																	// login
+																	// page
+				.defaultSuccessUrl("http://127.0.0.1:3000/home") // Redirect to
+																	// this URL
+																	// after
+				// successful login
+				.failureUrl("/login?error=true"); // Redirect to this URL on
+													// login failure
+
 		// converter for checking the roles to access endpoints
 		http.oauth2ResourceServer().jwt()
 				.jwtAuthenticationConverter(jwtAuthenticationConverter());
