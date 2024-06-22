@@ -31,7 +31,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import com.Genesis.SwiftSend.Client.ClientRepository;
+import com.Genesis.SwiftSend.OAuth.CustomAuthenticationSuccessHandler;
+import com.Genesis.SwiftSend.OAuth.CustomOAuth2UserService;
 import com.Genesis.SwiftSend.Registration.Token.JwtAuthenticationFilter;
+import com.Genesis.SwiftSend.Registration.Token.JwtTokenService;
 import com.Genesis.SwiftSend.User.UserRepository;
 import com.Genesis.SwiftSend.Utils.RSAKeyProperties;
 import com.nimbusds.jose.jwk.JWK;
@@ -50,9 +53,9 @@ import com.nimbusds.jose.proc.SecurityContext;
 public class UserRegistrationSecurityConfig {
 
 	private final UserDetailsService userDetailsService;
-	private final UserDetailsService clientDetailsService; // Separate
-															// UserDetailsService
-															// for clients
+	private final UserDetailsService clientDetailsService;
+	private CustomOAuth2UserService customOAuth2UserService;
+	// for clients
 	private final ClientRepository clientRepository;
 	private final UserRepository userRepository;
 
@@ -131,36 +134,32 @@ public class UserRegistrationSecurityConfig {
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.addFilterBefore(corsFilter(),
-				UsernamePasswordAuthenticationFilter.class);
-		http.cors(cors -> cors.disable());
-		http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> {
-			auth.requestMatchers(WHITE_LIST_URL).permitAll();
-			auth.requestMatchers("/api/admin/**").hasRole("ADMIN");
-			auth.requestMatchers("/api/users/**").hasAnyRole("ADMIN", "USER");
-			auth.anyRequest().authenticated().and().addFilterBefore(
-					jwtAuthenticationFilter(),
-					UsernamePasswordAuthenticationFilter.class);
-
-		});
-
-		// Add OAuth2 login configuration
-		http.oauth2Login().loginPage("http://127.0.0.1:3000/login") // Redirect
-																	// to the
-																	// React
-																	// login
-																	// page
-				.defaultSuccessUrl("http://127.0.0.1:3000/home") // Redirect to
-																	// this URL
-																	// after
-				// successful login
-				.failureUrl("/login?error=true"); // Redirect to this URL on
-													// login failure
-
-		// converter for checking the roles to access endpoints
-		http.oauth2ResourceServer().jwt()
-				.jwtAuthenticationConverter(jwtAuthenticationConverter());
-		http.sessionManagement(session -> session
-				.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+				UsernamePasswordAuthenticationFilter.class)
+				.cors(cors -> cors.disable()).csrf(csrf -> csrf.disable())
+				.authorizeHttpRequests(auth -> {
+					auth.requestMatchers(WHITE_LIST_URL).permitAll();
+					auth.requestMatchers("/api/admin/**").hasRole("ADMIN");
+					auth.requestMatchers("/api/users/**").hasAnyRole("ADMIN",
+							"USER");
+					auth.anyRequest().authenticated().and().addFilterBefore(
+							jwtAuthenticationFilter(),
+							UsernamePasswordAuthenticationFilter.class);
+				})
+				.oauth2Login(oauth2 -> oauth2
+						.loginPage("http://127.0.0.1:3000/login")
+						.defaultSuccessUrl("http://127.0.0.1:3000/user")
+						.failureUrl("http://127.0.0.1:3000/about")
+						.userInfoEndpoint()
+						.userService(customOAuth2UserService()).and()
+						.successHandler(customAuthenticationSuccessHandler()) // Added
+																				// success
+																				// handler
+				)
+				.oauth2ResourceServer(
+						oauth2 -> oauth2.jwt().jwtAuthenticationConverter(
+								jwtAuthenticationConverter()))
+				.sessionManagement(session -> session.sessionCreationPolicy(
+						SessionCreationPolicy.STATELESS));
 
 		return http.build();
 	}
@@ -169,6 +168,21 @@ public class UserRegistrationSecurityConfig {
 	public JwtDecoder jwtDecoder() {
 		return NimbusJwtDecoder.withPublicKey(keys.getPublicKey()).build();
 
+	}
+
+	@Bean
+	public CustomOAuth2UserService customOAuth2UserService() {
+		return new CustomOAuth2UserService(jwtTokenService());
+	}
+
+	@Bean
+	public JwtTokenService jwtTokenService() {
+		return new JwtTokenService();
+	}
+
+	@Bean
+	public CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler() {
+		return new CustomAuthenticationSuccessHandler(jwtTokenService());
 	}
 
 	// decoder uses public keysd to verify and authenticiy of the token

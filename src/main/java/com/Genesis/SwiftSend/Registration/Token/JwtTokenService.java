@@ -4,11 +4,13 @@
 package com.Genesis.SwiftSend.Registration.Token;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -67,6 +69,28 @@ public class JwtTokenService {
 				.issuedAt(currentTime).subject(auth.getName())
 				.claim("roles", scope).claim("email", email)
 				.claim("phoneNumber", phoneNumber).build();
+
+		return jwtEncoder.encode(JwtEncoderParameters.from(claims))
+				.getTokenValue();
+	}
+
+	public String generateJwt(OAuth2User oauth2User) {
+		Instant currentTime = Instant.now();
+
+		// Extract authorities (roles)
+		Collection<? extends GrantedAuthority> authorities = oauth2User
+				.getAuthorities();
+		String scope = authorities.stream().map(GrantedAuthority::getAuthority)
+				.collect(Collectors.joining(" "));
+
+		// Extract custom claims (email and phoneNumber)
+		String email = oauth2User.getAttribute("email"); // Adjust based on your
+															// OAuth2 provider's
+															// attribute name
+
+		JwtClaimsSet claims = JwtClaimsSet.builder().issuer("SwiftSendService")
+				.issuedAt(currentTime).subject(oauth2User.getName())
+				.claim("roles", scope).claim("email", email).build();
 
 		return jwtEncoder.encode(JwtEncoderParameters.from(claims))
 				.getTokenValue();
