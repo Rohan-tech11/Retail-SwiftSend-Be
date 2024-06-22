@@ -80,17 +80,20 @@ public class JwtTokenService {
 		// Extract authorities (roles)
 		Collection<? extends GrantedAuthority> authorities = oauth2User
 				.getAuthorities();
-		String scope = authorities.stream().map(GrantedAuthority::getAuthority)
-				.collect(Collectors.joining(" "));
+		/*
+		 * String scope =
+		 * authorities.stream().map(GrantedAuthority::getAuthority)
+		 * .collect(Collectors.joining(" "));
+		 */
 
 		// Extract custom claims (email and phoneNumber)
-		String email = oauth2User.getAttribute("email"); // Adjust based on your
-															// OAuth2 provider's
-															// attribute name
+		String email = oauth2User.getAttribute("email");
+		String name = oauth2User.getAttribute("name");
+		String roles = "USER";
 
 		JwtClaimsSet claims = JwtClaimsSet.builder().issuer("SwiftSendService")
-				.issuedAt(currentTime).subject(oauth2User.getName())
-				.claim("roles", scope).claim("email", email).build();
+				.issuedAt(currentTime).subject(name).claim("email", email)
+				.claim("roles", roles).build();
 
 		return jwtEncoder.encode(JwtEncoderParameters.from(claims))
 				.getTokenValue();

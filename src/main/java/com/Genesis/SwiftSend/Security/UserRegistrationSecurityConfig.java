@@ -31,6 +31,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import com.Genesis.SwiftSend.Client.ClientRepository;
+import com.Genesis.SwiftSend.OAuth.CustomAuthenticationFailureHandler;
 import com.Genesis.SwiftSend.OAuth.CustomAuthenticationSuccessHandler;
 import com.Genesis.SwiftSend.OAuth.CustomOAuth2UserService;
 import com.Genesis.SwiftSend.Registration.Token.JwtAuthenticationFilter;
@@ -151,10 +152,8 @@ public class UserRegistrationSecurityConfig {
 						.failureUrl("http://127.0.0.1:3000/about")
 						.userInfoEndpoint()
 						.userService(customOAuth2UserService()).and()
-						.successHandler(customAuthenticationSuccessHandler()) // Added
-																				// success
-																				// handler
-				)
+						.successHandler(customAuthenticationSuccessHandler())
+						.failureHandler(customAuthenticationFailureHandler()))
 				.oauth2ResourceServer(
 						oauth2 -> oauth2.jwt().jwtAuthenticationConverter(
 								jwtAuthenticationConverter()))
@@ -183,6 +182,11 @@ public class UserRegistrationSecurityConfig {
 	@Bean
 	public CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler() {
 		return new CustomAuthenticationSuccessHandler(jwtTokenService());
+	}
+
+	@Bean
+	public CustomAuthenticationFailureHandler customAuthenticationFailureHandler() {
+		return new CustomAuthenticationFailureHandler();
 	}
 
 	// decoder uses public keysd to verify and authenticiy of the token
