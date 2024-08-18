@@ -57,36 +57,4 @@ This project was developed as a part of the final year capstone project. It repr
 
 ### Configuration
 
-1. Clone the repository: git clone https://github.com/Rohan-tech11/Retail-SwiftSend-Be.git
-cd Retail-SwiftSend-Be
-
-2. Configure application properties:
-
-Update `src/main/resources/application.properties` with your database, email, and Google OAuth2 credentials. Use environment variables for sensitive information.
-
-3. Build and install dependencies: mvn clean install
-4. Run the application:mvn spring-boot:run
-### Running with Docker
-
-1. Build the Docker image:docker build -t swiftsend .
-2. Run the container:docker run -p 8080:8080 swiftsend
-## API Documentation
-
-Once the application is running, you can access the Swagger UI at:http://localhost:8080/swagger-ui.html
-This provides an interactive interface to explore and test the API endpoints.
-
-## Future Developments
-
-As part of our commitment to continuous improvement, we plan to keep updating SwiftSend with new features and enhancements. We welcome contributions from the community and aim to evolve this project to meet the ever-changing needs of the courier services industry.
-
-## Contributing
-
-We welcome contributions to SwiftSend! If you'd like to contribute, please follow these guidelines:
-
-### How to Contribute
-
-1. Fork the repository to your GitHub account.
-2. Create a new branch for your feature or bug fix: `git checkout -b feature/your-feature-name`
-3. Make your changes and commit them with descriptive commit messages.
-4. Push your changes to your fork
-5. Open a pull request on the original repository.
+1. Clone the repository:
