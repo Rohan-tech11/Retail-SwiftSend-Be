@@ -2,9 +2,7 @@
 
 SwiftSend is a Java-based middleware platform developed using the Spring Boot framework. It serves as a bridge between courier services and users in Canada, allowing users to create accounts, book orders, and enabling clients to provide and manage services. The application uses MySQL as its database (via Hibernate), React for the front end, and includes email authentication features.
 
-## Final Year Capstone Project
-
-This project was developed as a part of the final year capstone project. It represents the culmination of our academic journey, showcasing our skills in Java Spring Boot, React, and various technologies. We aimed to create a robust middleware platform that facilitates communication between courier services, clients, and users in Canada.
+This project represents my deep dive into modern cloud-native development, showcasing the implementation of a robust middleware platform that bridges courier services with end users. Built with Java Spring Boot and React, it demonstrates the practical application of enterprise-grade architectural patterns and DevOps practices.
 
 ## Features
 
